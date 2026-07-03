@@ -33,7 +33,7 @@ class JobController extends Controller
 
    public function get()
     {
-        $data = Job::where('country_id','1')->with('categories')->latest()->paginate(50);
+        $data = Job::where('country_id','1')->with('categories')->latest()->paginate(1000);
         $license = 'This API was developed by Edivaldo Jorge (https://github.com/jorgeedvaldo)';
         $message = 'Operation performed successfully.';
         return response()->json(
