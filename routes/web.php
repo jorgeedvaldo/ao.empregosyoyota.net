@@ -6,6 +6,7 @@ use App\Http\Controllers\AboutController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CurriculoController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImageProxyController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\OcrController;
 use App\Http\Controllers\TermController;
@@ -29,6 +30,14 @@ Route::get('/empregos/aberto-o-concurso-publico-da-policia-nacional-de-angola', 
 Route::get('/articles/novo-portal-de-recrutamento-da-policia-nacional-de-angola-revela-um-possivel-recrutamento', function () {
     return redirect('/articles/policia-nacional-de-angola-desmente-boatos-de-concurso-publico');
 });
+
+// Transparent proxy for images physically hosted on the main domain
+// (empregosyoyota.net). Apache only forwards here when the file does not
+// already exist under public/storage (see public/.htaccess), so a cached
+// copy is served as a static file on subsequent requests without
+// involving Laravel at all.
+Route::get('/storage/images/{path}', [ImageProxyController::class, 'show'])
+    ->where('path', '.*');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
