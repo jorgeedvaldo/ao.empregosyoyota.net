@@ -1,0 +1,9 @@
+# Served through the /storage symlink (public/storage -> storage/app/public).
+# Once the image proxy caches a file here, Apache serves it directly on
+# later requests without going through Laravel; this keeps the same
+# Cache-Control it would get from the proxy itself.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpe?g|png|webp|gif|svg)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
+</IfModule>
