@@ -95,16 +95,42 @@ Se preferir não usar o agendador, uma entrada horária directa serve:
 Sem uma destas entradas tudo continua a funcionar, mas as entradas expiradas
 só saem do disco quando o limite é atingido na execução manual do comando.
 
-## Índices
+## Índices (opcional, manual)
 
-```bash
-php artisan migrate
+**Nada nesta solução precisa de `php artisan migrate`.** Não são criadas
+tabelas nem colunas: as caches vivem em ficheiros e o código só lê colunas
+que já existem.
+
+Mais: **não corra `php artisan migrate` nesta instalação.** A base de dados é
+partilhada com o domínio principal e as migrações do repositório são
+anteriores ao esquema que está em produção (não têm `country_id` nem `slug`,
+e criariam tabelas que já existem). O comando tentaria aplicar tudo o que
+considera pendente, não apenas o que interessa.
+
+Os índices abaixo são só desempenho — reduzem o tempo de cada consulta e,
+com isso, o tempo que cada ligação fica ocupada. São opcionais e podem ser
+aplicados mais tarde, um a um, no phpMyAdmin:
+
+```sql
+ALTER TABLE `jobs`          ADD INDEX `jobs_country_id_id_index` (`country_id`, `id`);
+ALTER TABLE `jobs`          ADD INDEX `jobs_slug_index` (`slug`);
+ALTER TABLE `articles`      ADD INDEX `articles_country_id_id_index` (`country_id`, `id`);
+ALTER TABLE `articles`      ADD INDEX `articles_slug_index` (`slug`);
+ALTER TABLE `curriculos`    ADD INDEX `curriculos_slug_index` (`slug`);
+ALTER TABLE `category_jobs` ADD INDEX `category_jobs_job_id_index` (`job_id`);
+ALTER TABLE `category_jobs` ADD INDEX `category_jobs_category_id_index` (`category_id`);
 ```
 
-Acrescenta índices em `jobs(country_id, id)`, `jobs(slug)`,
-`articles(country_id, id)`, `articles(slug)`, `curriculos(slug)` e nas duas
-colunas de `category_jobs`. A migração verifica tabelas, colunas e índices
-existentes antes de criar, e pode ser executada mais do que uma vez.
+Notas:
+
+- São alterações aditivas: não mexem em dados nem no que o domínio principal
+  lê ou escreve, e beneficiam ambos os sites (as tabelas são as mesmas).
+- Erro `1061 Duplicate key name` significa apenas que o índice já existe —
+  pode ignorar essa linha.
+- Em tabelas grandes um `ALTER TABLE` bloqueia escritas durante alguns
+  segundos; prefira uma hora de pouco tráfego.
+- Para reverter: `ALTER TABLE `jobs` DROP INDEX `jobs_slug_index`;` (e assim
+  por diante).
 
 ## Como verificar que a cache está a funcionar
 
@@ -183,5 +209,5 @@ Reversão completa do código:
 
 ```bash
 git revert <commit>
-php artisan migrate:rollback   # apenas se os índices tiverem sido aplicados
+php artisan config:clear
 ```
