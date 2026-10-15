@@ -16,6 +16,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+
+        /*
+         * Limpeza das caches de fallback. withoutOverlapping() usa um bloqueio
+         * na cache de ficheiros (não depende do MySQL) e evita que duas
+         * execuções do cron se sobreponham e consumam ligações a mais.
+         */
+        $schedule->command('cache:prune-fallback')
+            ->hourly()
+            ->withoutOverlapping(30);
     }
 
     /**

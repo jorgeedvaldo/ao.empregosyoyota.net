@@ -39,40 +39,53 @@ Route::get('/articles/novo-portal-de-recrutamento-da-policia-nacional-de-angola-
 Route::get('/storage/images/{path}', [ImageProxyController::class, 'show'])
     ->where('path', '.*');
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
 Route::get('/terms', [TermController::class, 'index'])->name('terms');
 
-Route::get('/categories/{id}', [JobController::class, 'getByCategoryId'])
-    ->where('id', '[0-9]+');
-
-Route::get('/empregos', [JobController::class, 'index']);
-Route::get('/empregos/{slug}', [JobController::class, 'getBySlug']);
-
-
-Route::get('/jobs', [JobController::class, 'index']);
-Route::get('/jobs/{id}', [JobController::class, 'getById'])
-    ->where('id', '[0-9]+');
-
 Route::get('/pesquisar', [JobController::class, 'search'])->name('search');
 
-Route::get('/articles', [ArticleController::class, 'index']);
-Route::get('/articles/{id}', [ArticleController::class, 'getById'])
-    ->where('id', '[0-9]+');
-Route::get('/articles/{slug}', [ArticleController::class, 'getBySlug']);
-//Route::get('/articles/{slug}/amp', [ArticleController::class, 'getBySlugAMP']);
-
-Route::get('/modelos-de-curriculos', [CurriculoController::class, 'index']);
-Route::get('/modelos-de-curriculos/{slug}', [CurriculoController::class, 'getBySlug']);
-
-Route::get('/onlineocr', [OcrController::class, 'index'])->name('ocr');
 Route::get('/quiz', [OcrController::class, 'indexQuizPt'])->name('quiz');
 Route::get('/en/onlineocr', [OcrController::class, 'indexEn'])->name('ocren');
 Route::get('/en/dashboard', [OcrController::class, 'indexDashboardEn'])->name('dashboardEn');
 Route::get('/dashboard', [OcrController::class, 'indexDashboardPt'])->name('dashboardPt');
 
-Route::get('/sitemap.xml', [JobController::class, 'siteMapGenerator'])->name('sitemap');
-Route::get('/feed', [JobController::class, 'feedGenerator'])->name('feed');
+/*
+| Páginas públicas de leitura: servidas da cache de HTML quando existe cópia
+| válida e, se o MySQL estiver indisponível, da última cópia guardada.
+|
+| Fora deste grupo ficam, de propósito: /pesquisar (pesquisa livre, chaves de
+| cache ilimitadas), o painel de administração, a API e o proxy de imagens.
+*/
+Route::middleware('page.cache')->group(function () {
+
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    Route::get('/categories/{id}', [JobController::class, 'getByCategoryId'])
+        ->where('id', '[0-9]+');
+
+    Route::get('/empregos', [JobController::class, 'index']);
+    Route::get('/empregos/{slug}', [JobController::class, 'getBySlug']);
+
+
+    Route::get('/jobs', [JobController::class, 'index']);
+    Route::get('/jobs/{id}', [JobController::class, 'getById'])
+        ->where('id', '[0-9]+');
+
+    Route::get('/articles', [ArticleController::class, 'index']);
+    Route::get('/articles/{id}', [ArticleController::class, 'getById'])
+        ->where('id', '[0-9]+');
+    Route::get('/articles/{slug}', [ArticleController::class, 'getBySlug']);
+    //Route::get('/articles/{slug}/amp', [ArticleController::class, 'getBySlugAMP']);
+
+    Route::get('/modelos-de-curriculos', [CurriculoController::class, 'index']);
+    Route::get('/modelos-de-curriculos/{slug}', [CurriculoController::class, 'getBySlug']);
+
+    Route::get('/onlineocr', [OcrController::class, 'index'])->name('ocr');
+
+    Route::get('/sitemap.xml', [JobController::class, 'siteMapGenerator'])->name('sitemap');
+    Route::get('/feed', [JobController::class, 'feedGenerator'])->name('feed');
+
+});
 
 
 
