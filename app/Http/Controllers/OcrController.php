@@ -2,29 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Article;
-use App\Models\Category;
-use App\Models\Job;
-use Exception;
-use Illuminate\Http\Request;
+use App\Services\PublicContent;
 
 class OcrController extends Controller
 {
+    public function __construct(private PublicContent $content)
+    {
+    }
+
     public function index()
     {
-        try
-        {
-            $LastArticles = Article::orderByRaw('id DESC')->get();
-            $LastJobs = Job::with('categories')->where('country_id', 1)->orderByRaw('id DESC')->get();
-
-            $categories = Category::orderBy('name')->get();
-
-            return view('tools.ocr', compact('categories', 'LastArticles', 'LastJobs'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        return view('tools.ocr', [
+            'categories' => $this->content->categories(),
+            'LastArticles' => $this->content->latestArticlesAnyCountry(),
+            'LastJobs' => $this->content->latestJobs(),
+        ]);
     }
 	
 	public function indexEn()
