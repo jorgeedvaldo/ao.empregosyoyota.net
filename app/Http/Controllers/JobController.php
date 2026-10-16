@@ -2,35 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\DatabaseUnavailableException;
+use App\Models\Article;
+use App\Models\Category;
 use App\Models\Job;
-use App\Services\PublicContent;
 use Exception;
 use Illuminate\Http\Request;
 
 class JobController extends Controller
 {
-    public function __construct(private PublicContent $content)
-    {
-    }
-
     public function index()
     {
-        return view('jobs', [
-            'jobs' => $this->content->jobsPage(30),
-            'categories' => $this->content->categories(),
-        ]);
+        $jobs = Job::where('country_id', 1)->orderByRaw('id DESC')->paginate(30);
+        $categories = Category::orderBy('name')->get();
+        return view('jobs', compact('jobs', 'categories'));
     }
 
     public function getById($id)
     {
         try
         {
-            return $this->jobView($this->content->jobById((int) $id));
-        }
-        catch(DatabaseUnavailableException $ex)
-        {
-            throw $ex;
+            $job = Job::with('categories')->where('country_id', 1)->where('id', $id)->get()[0];
+
+            $LastArticles = Article::orderByRaw('id DESC')->get();
+            $LastJobs = Job::with('categories')->where('country_id', 1)->where('id', '<>', $id)->orderByRaw('id DESC')->get();
+
+            $categories = Category::orderBy('name')->get();
+
+            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs'));
         }
         catch(Exception $ex)
         {
@@ -42,51 +40,48 @@ class JobController extends Controller
     {
         try
         {
-            $category = $this->content->categoryWithJobs((int) $id);
-        }
-        catch(DatabaseUnavailableException $ex)
-        {
-            throw $ex;
+            $categories = Category::orderBy('name')->get();
+
+            $category = Category::with([ 'jobs' => function($query){
+                $query->where('country_id', 1)->orderByRaw('id DESC')->get();
+            }])->where('id', $id)->first();
+
+            $categoryJobs = $category->jobs;
+            return view('category', compact('category', 'categoryJobs', 'categories'));
         }
         catch(Exception $ex)
         {
             abort(404);
         }
 
-        abort_if($category === null, 404);
-
-        return view('category', [
-            'category' => $category,
-            'categoryJobs' => $category->jobs,
-            'categories' => $this->content->categories(),
-        ]);
     }
 
     public function getBySlug($slug)
     {
         try
         {
-            return $this->jobView($this->content->jobBySlug($slug));
-        }
-        catch(DatabaseUnavailableException $ex)
-        {
-            throw $ex;
+            $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->get()[0];
+
+            $LastArticles = Article::orderByRaw('id DESC')->get();
+            $LastJobs = Job::with('categories')->where('country_id', 1)->where('slug', '<>', $slug)->orderByRaw('id DESC')->get();
+
+            $categories = Category::orderBy('name')->get();
+
+            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs'));
         }
         catch(Exception $ex)
         {
             abort(404);
         }
     }
-
+	
 	public function getBySlugAMP($slug)
     {
         try
         {
-            return view('amp.job', ['job' => $this->content->jobBySlug($slug)]);
-        }
-        catch(DatabaseUnavailableException $ex)
-        {
-            throw $ex;
+            $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->get()[0];
+
+            return view('amp.job', compact('job'));
         }
         catch(Exception $ex)
         {
@@ -103,38 +98,21 @@ class JobController extends Controller
                     ->orderByRaw('id DESC')
                     ->paginate(30);
 
-        $categories = $this->content->categories();
+        $categories = Category::orderBy('name')->get();
 
         return view('search', compact('categories', 'jobs', 'query'));
     }
-
+	
 	public function siteMapGenerator()
     {
-        return response()->view('xml.sitemap', [
-            'jobs' => $this->content->sitemapJobs(500),
-            'articles' => $this->content->sitemapArticles(300),
-        ])->header('Content-Type', 'text/xml');
+        $jobs = Job::orderByRaw('id DESC')->paginate(500);
+		$articles = Article::orderByRaw('id DESC')->paginate(300);
+        return response()->view('xml.sitemap', compact('jobs', 'articles'))->header('Content-Type', 'text/xml');
     }
-
+	
 	public function feedGenerator()
     {
-        return response()->view('xml.feed', [
-            'jobs' => $this->content->feedJobs(10),
-        ])->header('Content-Type', 'text/xml');
-    }
-
-    /**
-     * The job page and its sidebars. $LastJobs must keep the contract the view
-     * relies on: entries 0..4 plus the next older job for the "ver próxima
-     * vaga" link.
-     */
-    private function jobView(Job $job)
-    {
-        return view('job', [
-            'job' => $job,
-            'categories' => $this->content->categories(),
-            'LastArticles' => $this->content->latestArticlesAnyCountry(),
-            'LastJobs' => $this->content->sidebarJobsFor($job),
-        ]);
+        $jobs = Job::orderByRaw('id DESC')->paginate(10);
+        return response()->view('xml.feed', compact('jobs'))->header('Content-Type', 'text/xml');
     }
 }

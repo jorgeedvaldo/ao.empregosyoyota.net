@@ -54,21 +54,6 @@ return [
             'path' => storage_path('framework/cache/data'),
         ],
 
-        /*
-        | Stores próprios para a tolerância a falhas do MySQL. Ficam separados
-        | do store "file" por omissão para que um cache:clear não apague a
-        | cópia de emergência que mantém as páginas públicas acessíveis.
-        */
-        'fallback' => [
-            'driver' => 'file',
-            'path' => storage_path('framework/cache/fallback'),
-        ],
-
-        'pages' => [
-            'driver' => 'file',
-            'path' => storage_path('framework/cache/pages'),
-        ],
-
         'memcached' => [
             'driver' => 'memcached',
             'persistent_id' => env('MEMCACHED_PERSISTENT_ID'),
