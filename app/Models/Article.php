@@ -77,6 +77,7 @@ class Article extends Model
         Cache::forget('articles:latest');
         Cache::forget('articles:latest-any');
         Cache::forget('articles:count');
+        Cache::forget(Job::SITEMAP_CACHE_KEY);
     }
 
     private function generateSlug($title, $id)

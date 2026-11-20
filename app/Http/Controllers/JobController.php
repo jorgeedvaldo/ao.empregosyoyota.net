@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\Job;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Cache;
 
 class JobController extends Controller
 {
@@ -95,16 +97,37 @@ class JobController extends Controller
         return view('search', compact('categories', 'jobs', 'query'));
     }
 
-	public function siteMapGenerator()
+    public function siteMapGenerator()
     {
-        $jobs = Job::orderByRaw('id DESC')->paginate(500);
-		$articles = Article::orderByRaw('id DESC')->paginate(300);
-        return response()->view('xml.sitemap', compact('jobs', 'articles'))->header('Content-Type', 'text/xml');
+        $page = Paginator::resolveCurrentPage();
+
+        $render = function () use ($page) {
+            $columns = ['id', 'slug', 'photo', 'updated_at'];
+
+            return view('xml.sitemap', [
+                'jobs' => Job::orderByDesc('id')->forPage($page, 500)->get($columns),
+                'articles' => Article::orderByDesc('id')->forPage($page, 300)->get($columns),
+            ])->render();
+        };
+
+        // O XML ficou igual; só a 1.ª página (a que o Google conhece) vai para a cache.
+        $xml = $page === 1 ? Cache::remember(Job::SITEMAP_CACHE_KEY, Job::XML_CACHE_TTL, $render) : $render();
+
+        return response($xml)->header('Content-Type', 'text/xml');
     }
-	
-	public function feedGenerator()
+
+    public function feedGenerator()
     {
-        $jobs = Job::orderByRaw('id DESC')->paginate(10);
-        return response()->view('xml.feed', compact('jobs'))->header('Content-Type', 'text/xml');
+        $page = Paginator::resolveCurrentPage();
+
+        $render = function () use ($page) {
+            return view('xml.feed', [
+                'jobs' => Job::orderByDesc('id')->forPage($page, 10)->get(),
+            ])->render();
+        };
+
+        $xml = $page === 1 ? Cache::remember(Job::FEED_CACHE_KEY, Job::XML_CACHE_TTL, $render) : $render();
+
+        return response($xml)->header('Content-Type', 'text/xml');
     }
 }

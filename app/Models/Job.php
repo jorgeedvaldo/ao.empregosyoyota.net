@@ -27,6 +27,11 @@ class Job extends Model
     public const SEARCH_TTL = 300;
     public const SEARCH_CACHED_PAGES = 5;
 
+    /** XML do sitemap e do feed, já renderizado. Uma hora; gravar uma vaga ou artigo apaga-o. */
+    public const SITEMAP_CACHE_KEY = 'xml:sitemap';
+    public const FEED_CACHE_KEY = 'xml:feed';
+    public const XML_CACHE_TTL = 3600;
+
     protected $fillable = [
         'title', 'slug', 'company', 'province', 'description', 'email_or_link', 'photo'
     ];
@@ -119,6 +124,8 @@ class Job extends Model
     {
         Cache::forget('jobs:latest');
         Cache::forget('jobs:count');
+        Cache::forget(self::SITEMAP_CACHE_KEY);
+        Cache::forget(self::FEED_CACHE_KEY);
         // As páginas de categoria listam vagas; a ligação vaga-categoria é
         // gravada pelo painel logo a seguir, por isso também têm validade curta.
         Category::forgetJobsCache();
