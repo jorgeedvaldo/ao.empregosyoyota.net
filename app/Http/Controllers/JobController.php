@@ -37,22 +37,16 @@ class JobController extends Controller
 
     public function getByCategoryId($id)
     {
-        try
-        {
-            $categories = Category::orderBy('name')->get();
+        // Ids que não existem dão 404 sem tocar na base de dados: a lista de
+        // categorias vem da cache.
+        $categories = Category::getCachedAll();
+        $category = $categories->firstWhere('id', (int) $id);
 
-            $category = Category::with([ 'jobs' => function($query){
-                $query->where('country_id', 1)->orderByRaw('id DESC')->get();
-            }])->where('id', $id)->first();
+        abort_if($category === null, 404);
 
-            $categoryJobs = $category->jobs;
-            return view('category', compact('category', 'categoryJobs', 'categories'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        $categoryJobs = $category->getCachedJobs();
 
+        return view('category', compact('category', 'categoryJobs', 'categories'));
     }
 
     public function getBySlug($slug)
@@ -91,16 +85,16 @@ class JobController extends Controller
     {
         $query = $request->input('query');
 
-        $jobs = Job::where('title', 'LIKE', "%{$query}%")
-                    ->orWhere('description', 'LIKE', "%{$query}%")
-                    ->orderByRaw('id DESC')
-                    ->paginate(30);
+        // Texto livre vindo de fora: sem arrays e com no máximo 60 caracteres.
+        $query = is_string($query) ? mb_substr($query, 0, 60) : null;
 
-        $categories = Category::orderBy('name')->get();
+        $jobs = Job::search($query);
+
+        $categories = Category::getCachedAll();
 
         return view('search', compact('categories', 'jobs', 'query'));
     }
-	
+
 	public function siteMapGenerator()
     {
         $jobs = Job::orderByRaw('id DESC')->paginate(500);

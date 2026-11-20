@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Models\Concerns\PaginatesFromCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
@@ -20,6 +22,10 @@ class Job extends Model
 
     /** Validade da cache em segundos. Curta porque a base de dados pode ser escrita por outro site. */
     public const CACHE_TTL = 600;
+
+    /** Validade dos resultados de pesquisa e quantas páginas de cada pesquisa se guardam. */
+    public const SEARCH_TTL = 300;
+    public const SEARCH_CACHED_PAGES = 5;
 
     protected $fillable = [
         'title', 'slug', 'company', 'province', 'description', 'email_or_link', 'photo'
@@ -76,10 +82,46 @@ class Job extends Model
             ->first(['id', 'slug']);
     }
 
+    /**
+     * Pesquisa por título ou descrição nas vagas do país 1. O resultado de
+     * cada termo e página fica 5 minutos em cache: os robôs repetem as mesmas
+     * pesquisas e cada uma varre a tabela inteira. Páginas fundas não ficam em
+     * cache para que ninguém encha o disco com ?page=N.
+     */
+    public static function search(?string $term, int $perPage = 30): LengthAwarePaginator
+    {
+        $term = (string) $term;
+        $page = Paginator::resolveCurrentPage();
+
+        $run = function () use ($term, $perPage) {
+            $found = static::where('country_id', 1)
+                ->where(function ($query) use ($term) {
+                    $query->where('title', 'LIKE', "%{$term}%")
+                        ->orWhere('description', 'LIKE', "%{$term}%");
+                })
+                ->orderByDesc('id')
+                ->paginate($perPage, self::LIST_COLUMNS);
+
+            return ['items' => $found->getCollection(), 'total' => $found->total()];
+        };
+
+        $result = $page <= self::SEARCH_CACHED_PAGES
+            ? Cache::remember('search:'.sha1(mb_strtolower($term)).':'.$perPage.':'.$page, self::SEARCH_TTL, $run)
+            : $run();
+
+        return new LengthAwarePaginator($result['items'], $result['total'], $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => 'page',
+        ]);
+    }
+
     public static function forgetCache(): void
     {
         Cache::forget('jobs:latest');
         Cache::forget('jobs:count');
+        // As páginas de categoria listam vagas; a ligação vaga-categoria é
+        // gravada pelo painel logo a seguir, por isso também têm validade curta.
+        Category::forgetJobsCache();
     }
 
     private function generateSlug($title, $id)
