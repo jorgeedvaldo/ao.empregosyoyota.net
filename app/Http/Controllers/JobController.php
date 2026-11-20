@@ -12,8 +12,8 @@ class JobController extends Controller
 {
     public function index()
     {
-        $jobs = Job::where('country_id', 1)->orderByRaw('id DESC')->paginate(30);
-        $categories = Category::orderBy('name')->get();
+        $jobs = Job::cachedPage(30);
+        $categories = Category::getCachedAll();
         return view('jobs', compact('jobs', 'categories'));
     }
 

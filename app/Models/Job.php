@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PaginatesFromCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -9,7 +10,10 @@ use Illuminate\Support\Str;
 
 class Job extends Model
 {
-    use HasFactory;
+    use HasFactory, PaginatesFromCache;
+
+    /** Colunas que as listagens e barras laterais mostram (a descrição fica de fora). */
+    public const LIST_COLUMNS = ['id', 'title', 'slug', 'company', 'province', 'created_at'];
 
     /** Quantas vagas recentes ficam em cache (cobre barras laterais e a 1.ª página das listagens). */
     public const LATEST_LIMIT = 50;
@@ -49,7 +53,7 @@ class Job extends Model
             return static::where('country_id', 1)
                 ->orderByDesc('id')
                 ->limit(self::LATEST_LIMIT)
-                ->get(['id', 'title', 'slug', 'company', 'province', 'created_at']);
+                ->get(self::LIST_COLUMNS);
         });
     }
 

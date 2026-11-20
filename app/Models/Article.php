@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PaginatesFromCache;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -9,7 +10,10 @@ use Illuminate\Support\Str;
 
 class Article extends Model
 {
-    use HasFactory;
+    use HasFactory, PaginatesFromCache;
+
+    /** Colunas que as listagens e barras laterais mostram (a descrição fica de fora). */
+    public const LIST_COLUMNS = ['id', 'title', 'slug', 'created_at'];
 
     /** Quantos artigos recentes ficam em cache (barras laterais e 1.ª página das listagens). */
     public const LATEST_LIMIT = 50;
@@ -44,7 +48,7 @@ class Article extends Model
             return static::where('country_id', 1)
                 ->orderByDesc('id')
                 ->limit(self::LATEST_LIMIT)
-                ->get(['id', 'title', 'slug', 'created_at']);
+                ->get(self::LIST_COLUMNS);
         });
     }
 
@@ -57,7 +61,7 @@ class Article extends Model
         return Cache::remember('articles:latest-any', self::CACHE_TTL, function () {
             return static::orderByDesc('id')
                 ->limit(self::LATEST_LIMIT)
-                ->get(['id', 'title', 'slug', 'created_at']);
+                ->get(self::LIST_COLUMNS);
         });
     }
 

@@ -12,7 +12,7 @@ class ArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::where('country_id', 1)->orderByRaw('id DESC')->paginate(16);
+        $articles = Article::cachedPage(16);
         return view('articles', compact('articles'));
     }
 
