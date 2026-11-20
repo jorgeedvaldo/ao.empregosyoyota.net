@@ -60,6 +60,19 @@ trait CreatesPublicSchema
             $table->timestamps();
         });
 
+        Schema::create('drafts', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('title');
+            $table->string('slug')->nullable();
+            $table->string('company');
+            $table->string('province');
+            $table->text('description');
+            $table->string('email_or_link')->nullable();
+            $table->string('photo')->default('job.jpg');
+            $table->integer('country_id')->default(1);
+            $table->timestamps();
+        });
+
         Schema::create('social_media_jobs', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('job_id');

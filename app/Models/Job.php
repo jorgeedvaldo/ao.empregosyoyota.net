@@ -50,8 +50,14 @@ class Job extends Model
             ]);
         });
 
-        static::saved(fn () => static::forgetCache());
-        static::deleted(fn () => static::forgetCache());
+        static::saved(function ($job) {
+            static::forgetCache();
+            Cache::forget("api:job:{$job->id}");
+        });
+        static::deleted(function ($job) {
+            static::forgetCache();
+            Cache::forget("api:job:{$job->id}");
+        });
     }
 
     /**
