@@ -1,0 +1,84 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+
+use App\Http\Controllers\AboutController;
+use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CurriculoController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ImageProxyController;
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\OcrController;
+use App\Http\Controllers\TermController;
+
+/*
+|--------------------------------------------------------------------------
+| Rotas públicas de leitura
+|--------------------------------------------------------------------------
+|
+| Carregadas pelo RouteServiceProvider com o grupo de middleware "public"
+| (ver App\Http\Kernel): sem sessão, sem cookies e sem CSRF, por isso os
+| robôs que as percorrem já não criam um ficheiro de sessão por pedido.
+|
+| Só rotas GET, sem formulários com estado. Qualquer rota que precise de
+| sessão, de CSRF ou de utilizador autenticado (um POST, um formulário com
+| mensagens de erro, uma área de conta) NÃO deve ficar aqui: vai para
+| routes/web.php, que continua a usar o grupo "web". O painel Filament
+| (/admin) e a API têm os seus próprios middleware e não passam por aqui.
+|
+| A ordem importa: os redirecionamentos têm de vir antes de /articles/{slug}
+| e /empregos/{slug}.
+|
+*/
+
+
+Route::get('/empregos/aberto-o-concurso-publico-da-policia-nacional-de-angola', function () {
+    return redirect('/articles/policia-nacional-de-angola-desmente-boatos-de-concurso-publico');
+});
+
+Route::get('/articles/novo-portal-de-recrutamento-da-policia-nacional-de-angola-revela-um-possivel-recrutamento', function () {
+    return redirect('/articles/policia-nacional-de-angola-desmente-boatos-de-concurso-publico');
+});
+
+// Transparent proxy for images physically hosted on the main domain
+// (empregosyoyota.net). Apache only forwards here when the file does not
+// already exist under public/storage (see public/.htaccess), so a cached
+// copy is served as a static file on subsequent requests without
+// involving Laravel at all.
+Route::get('/storage/images/{path}', [ImageProxyController::class, 'show'])
+    ->where('path', '.*');
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [AboutController::class, 'index'])->name('about');
+Route::get('/terms', [TermController::class, 'index'])->name('terms');
+
+Route::get('/categories/{id}', [JobController::class, 'getByCategoryId'])
+    ->where('id', '[0-9]+');
+
+Route::get('/empregos', [JobController::class, 'index']);
+Route::get('/empregos/{slug}', [JobController::class, 'getBySlug']);
+
+
+Route::get('/jobs', [JobController::class, 'index']);
+Route::get('/jobs/{id}', [JobController::class, 'getById'])
+    ->where('id', '[0-9]+');
+
+Route::get('/pesquisar', [JobController::class, 'search'])->name('search');
+
+Route::get('/articles', [ArticleController::class, 'index']);
+Route::get('/articles/{id}', [ArticleController::class, 'getById'])
+    ->where('id', '[0-9]+');
+Route::get('/articles/{slug}', [ArticleController::class, 'getBySlug']);
+//Route::get('/articles/{slug}/amp', [ArticleController::class, 'getBySlugAMP']);
+
+Route::get('/modelos-de-curriculos', [CurriculoController::class, 'index']);
+Route::get('/modelos-de-curriculos/{slug}', [CurriculoController::class, 'getBySlug']);
+
+Route::get('/onlineocr', [OcrController::class, 'index'])->name('ocr');
+Route::get('/quiz', [OcrController::class, 'indexQuizPt'])->name('quiz');
+Route::get('/en/onlineocr', [OcrController::class, 'indexEn'])->name('ocren');
+Route::get('/en/dashboard', [OcrController::class, 'indexDashboardEn'])->name('dashboardEn');
+Route::get('/dashboard', [OcrController::class, 'indexDashboardPt'])->name('dashboardPt');
+
+Route::get('/sitemap.xml', [JobController::class, 'siteMapGenerator'])->name('sitemap');
+Route::get('/feed', [JobController::class, 'feedGenerator'])->name('feed');

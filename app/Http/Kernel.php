@@ -38,6 +38,13 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
 
+        // Páginas públicas de leitura (routes/public.php). Sem StartSession, EncryptCookies,
+        // ShareErrorsFromSession e VerifyCsrfToken: nenhuma destas páginas usa sessão,
+        // $errors, old(), auth() nem formulários POST.
+        'public' => [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ],
+
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
