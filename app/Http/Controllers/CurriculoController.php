@@ -9,7 +9,7 @@ class CurriculoController extends Controller
 {
     public function index()
     {
-        $curriculos = Curriculo::orderByRaw('id DESC')->paginate(15);
+        $curriculos = Curriculo::orderByDesc('id')->paginate(15);
         return view('curriculos', compact('curriculos'));
     }
 

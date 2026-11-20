@@ -21,7 +21,7 @@ class JobController extends Controller
     public function getById($id)
     {
         return $this->showJob(
-            Job::with('categories')->where('country_id', 1)->where('id', $id)->firstOrFail()
+            Job::where('country_id', 1)->where('id', $id)->firstOrFail()
         );
     }
 
@@ -42,13 +42,13 @@ class JobController extends Controller
     public function getBySlug($slug)
     {
         return $this->showJob(
-            Job::with('categories')->where('country_id', 1)->where('slug', $slug)->firstOrFail()
+            Job::where('country_id', 1)->where('slug', $slug)->firstOrFail()
         );
     }
 
     public function getBySlugAMP($slug)
     {
-        $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->firstOrFail();
+        $job = Job::where('country_id', 1)->where('slug', $slug)->firstOrFail();
 
         return view('amp.job', compact('job'));
     }
