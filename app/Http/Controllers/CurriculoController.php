@@ -15,14 +15,8 @@ class CurriculoController extends Controller
 
     public function getBySlug($slug)
     {
-        try
-        {
-            $curriculo = Curriculo::where('slug', $slug)->get()[0];
-            return view('curriculo', compact('curriculo'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        $curriculo = Curriculo::where('slug', $slug)->firstOrFail();
+
+        return view('curriculo', compact('curriculo'));
     }
 }

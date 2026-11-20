@@ -74,7 +74,7 @@ class PublicGroupTest extends TestCase
 
     public function test_not_found_pages_still_render_without_a_session(): void
     {
-        foreach (['/empregos/nao-existe', '/articles/nao-existe', '/jobs/9999', '/categories/9999', '/rota/que-nao-existe'] as $url) {
+        foreach (['/empregos/nao-existe', '/articles/nao-existe', '/jobs/9999', '/categories/9999', '/modelos-de-curriculos/nao-existe', '/rota/que-nao-existe'] as $url) {
             $response = $this->get($url);
 
             $response->assertNotFound()->assertSee('Oops! Página Não Encontrada');

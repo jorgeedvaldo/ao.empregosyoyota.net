@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\Job;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
@@ -21,20 +20,9 @@ class JobController extends Controller
 
     public function getById($id)
     {
-        try
-        {
-            $job = Job::with('categories')->where('country_id', 1)->where('id', $id)->get()[0];
-
-            $LastArticles = Article::getCachedLatestAnyCountry();
-            $LastJobs = Job::getCachedLatest()->where('id', '<>', $job->id)->values();
-            $previousJob = Job::nextOlder($job);
-
-            return view('job', compact('job', 'LastArticles', 'LastJobs', 'previousJob'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        return $this->showJob(
+            Job::with('categories')->where('country_id', 1)->where('id', $id)->firstOrFail()
+        );
     }
 
     public function getByCategoryId($id)
@@ -53,34 +41,16 @@ class JobController extends Controller
 
     public function getBySlug($slug)
     {
-        try
-        {
-            $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->get()[0];
-
-            $LastArticles = Article::getCachedLatestAnyCountry();
-            $LastJobs = Job::getCachedLatest()->where('id', '<>', $job->id)->values();
-            $previousJob = Job::nextOlder($job);
-
-            return view('job', compact('job', 'LastArticles', 'LastJobs', 'previousJob'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        return $this->showJob(
+            Job::with('categories')->where('country_id', 1)->where('slug', $slug)->firstOrFail()
+        );
     }
-	
-	public function getBySlugAMP($slug)
-    {
-        try
-        {
-            $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->get()[0];
 
-            return view('amp.job', compact('job'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+    public function getBySlugAMP($slug)
+    {
+        $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->firstOrFail();
+
+        return view('amp.job', compact('job'));
     }
 
     public function search(Request $request)
@@ -129,5 +99,14 @@ class JobController extends Controller
         $xml = $page === 1 ? Cache::remember(Job::FEED_CACHE_KEY, Job::XML_CACHE_TTL, $render) : $render();
 
         return response($xml)->header('Content-Type', 'text/xml');
+    }
+
+    private function showJob(Job $job)
+    {
+        $LastArticles = Article::getCachedLatestAnyCountry();
+        $LastJobs = Job::getCachedLatest()->where('id', '<>', $job->id)->values();
+        $previousJob = Job::nextOlder($job);
+
+        return view('job', compact('job', 'LastArticles', 'LastJobs', 'previousJob'));
     }
 }
