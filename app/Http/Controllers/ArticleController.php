@@ -22,8 +22,8 @@ class ArticleController extends Controller
         {
             $article = Article::where('country_id', 1)->where('id', $id)->get()[0];
 
-            $LastArticles = Article::where('country_id', 1)->where('id', '<>', $id)->orderByRaw('id DESC')->get();
-            $LastJobs = Job::with('categories')->where('country_id', 1)->orderByRaw('id DESC')->get();
+            $LastArticles = Article::getCachedLatest()->where('id', '<>', $article->id)->values();
+            $LastJobs = Job::getCachedLatest();
 
             return view('article', compact('article', 'LastArticles', 'LastJobs'));
         }
@@ -39,8 +39,8 @@ class ArticleController extends Controller
         {
             $article = Article::where('country_id', 1)->where('slug', $slug)->get()[0];
 
-            $LastArticles = Article::where('country_id', 1)->where('slug', '<>', $slug)->orderByRaw('id DESC')->get();
-			$LastJobs = Job::with('categories')->where('country_id', 1)->orderByRaw('id DESC')->get();
+            $LastArticles = Article::getCachedLatest()->where('id', '<>', $article->id)->values();
+            $LastJobs = Job::getCachedLatest();
 
             return view('article', compact('article', 'LastArticles', 'LastJobs'));
         }

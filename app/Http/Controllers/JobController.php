@@ -23,13 +23,11 @@ class JobController extends Controller
         {
             $job = Job::with('categories')->where('country_id', 1)->where('id', $id)->get()[0];
 
-            $LastArticles = Article::orderByRaw('id DESC')->get();
-            $LastJobs = Job::with('categories')->where('country_id', 1)->where('id', '<>', $id)->orderByRaw('id DESC')->get();
+            $LastArticles = Article::getCachedLatestAnyCountry();
+            $LastJobs = Job::getCachedLatest()->where('id', '<>', $job->id)->values();
             $previousJob = Job::nextOlder($job);
 
-            $categories = Category::orderBy('name')->get();
-
-            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs', 'previousJob'));
+            return view('job', compact('job', 'LastArticles', 'LastJobs', 'previousJob'));
         }
         catch(Exception $ex)
         {
@@ -63,13 +61,11 @@ class JobController extends Controller
         {
             $job = Job::with('categories')->where('country_id', 1)->where('slug', $slug)->get()[0];
 
-            $LastArticles = Article::orderByRaw('id DESC')->get();
-            $LastJobs = Job::with('categories')->where('country_id', 1)->where('slug', '<>', $slug)->orderByRaw('id DESC')->get();
+            $LastArticles = Article::getCachedLatestAnyCountry();
+            $LastJobs = Job::getCachedLatest()->where('id', '<>', $job->id)->values();
             $previousJob = Job::nextOlder($job);
 
-            $categories = Category::orderBy('name')->get();
-
-            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs', 'previousJob'));
+            return view('job', compact('job', 'LastArticles', 'LastJobs', 'previousJob'));
         }
         catch(Exception $ex)
         {

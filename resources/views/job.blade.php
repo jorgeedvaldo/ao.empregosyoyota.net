@@ -278,7 +278,7 @@
             <div class="row">
               <div class="col-lg-12">
                 <div class="list-group mb-3">
-                  @for($i = 0; $i < 5; $i++)
+                  @for($i = 0; $i < min(5, count($LastJobs)); $i++)
   
                       <a href="{{ url('/empregos/' . $LastJobs[$i]['slug']) }}" class="list-group-item list-group-item-action mb-3">
                           <div class="d-flex w-100 justify-content-between">
@@ -303,7 +303,7 @@
             <div class="row">
               <div class="col-lg-12">
                 <div class="list-group mb-3">
-                  @for($i = 0; $i < 5; $i++)
+                  @for($i = 0; $i < min(5, count($LastArticles)); $i++)
   
                     <a href="{{ url('/articles/' . $LastArticles[$i]['slug']) }}" class="list-group-item list-group-item-action mb-3">
                       <div class="d-flex w-100 justify-content-between">
