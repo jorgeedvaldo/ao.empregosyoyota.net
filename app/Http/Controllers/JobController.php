@@ -25,10 +25,11 @@ class JobController extends Controller
 
             $LastArticles = Article::orderByRaw('id DESC')->get();
             $LastJobs = Job::with('categories')->where('country_id', 1)->where('id', '<>', $id)->orderByRaw('id DESC')->get();
+            $previousJob = Job::nextOlder($job);
 
             $categories = Category::orderBy('name')->get();
 
-            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs'));
+            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs', 'previousJob'));
         }
         catch(Exception $ex)
         {
@@ -64,10 +65,11 @@ class JobController extends Controller
 
             $LastArticles = Article::orderByRaw('id DESC')->get();
             $LastJobs = Job::with('categories')->where('country_id', 1)->where('slug', '<>', $slug)->orderByRaw('id DESC')->get();
+            $previousJob = Job::nextOlder($job);
 
             $categories = Category::orderBy('name')->get();
 
-            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs'));
+            return view('job', compact('job', 'categories', 'LastArticles', 'LastJobs', 'previousJob'));
         }
         catch(Exception $ex)
         {

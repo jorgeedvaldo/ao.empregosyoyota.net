@@ -184,10 +184,9 @@
         <img class="img-fluid rounded" src="{{asset('storage/' . $job['photo'])}}" alt="Emprego">
 
         <hr>
-		@php
-		  $previousJob = $LastJobs->where('id', '<', $job['id'])->first();
-		@endphp
+		@if($previousJob)
 		<a href="https://ao.empregosyoyota.net/empregos/{{$previousJob->slug}}?utm_campaign=next_button&utm_source=next_button" class="btn btn-big btn-dark btn-block mb-3 mt-3">VER PROXIMA VAGA</a>
+		@endif
         <!-- Post Content -->
         <h3>Descrição:</h3>
 		<!-- AD 1 -->
@@ -224,7 +223,9 @@
 		  <p><strong><span>Entre no nosso canal do WhatsApp&nbsp;</span></strong><a href="https://whatsapp.com/channel/0029VaCfSeo0bIdgKs7bIB3t"><strong>CLICANDO AQUI</strong></a></p>
 			  <hr>
 			
+		@if($previousJob)
 		<a href="https://ao.empregosyoyota.net/empregos/{{$previousJob->slug}}?utm_campaign=next_button&utm_source=next_button" class="btn btn-big btn-dark btn-block mb-3">VER PROXIMA VAGA</a>
+		@endif
 		  
 		<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2118765549976668"
      crossorigin="anonymous"></script>

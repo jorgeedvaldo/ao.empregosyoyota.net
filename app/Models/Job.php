@@ -60,6 +60,18 @@ class Job extends Model
         });
     }
 
+    /**
+     * A vaga publicada imediatamente antes desta (para o botão "ver próxima
+     * vaga"). Consulta própria e leve; devolve null para a vaga mais antiga.
+     */
+    public static function nextOlder(self $job): ?self
+    {
+        return static::where('country_id', 1)
+            ->where('id', '<', $job->id)
+            ->orderByDesc('id')
+            ->first(['id', 'slug']);
+    }
+
     public static function forgetCache(): void
     {
         Cache::forget('jobs:latest');
