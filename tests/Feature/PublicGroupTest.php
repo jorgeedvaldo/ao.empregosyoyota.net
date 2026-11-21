@@ -96,7 +96,7 @@ class PublicGroupTest extends TestCase
         $login = $this->get('/admin/login')->assertOk();
 
         $names = array_map(fn ($cookie) => $cookie->getName(), $login->headers->getCookies());
-        $this->assertContains('laravel_session', $names, 'O painel tem de continuar a ter sessão.');
+        $this->assertContains(config('session.cookie'), $names, 'O painel tem de continuar a ter sessão.');
         $this->assertContains('XSRF-TOKEN', $names);
 
         $this->get('/admin')->assertRedirect();
