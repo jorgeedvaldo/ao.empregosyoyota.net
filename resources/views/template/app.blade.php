@@ -8,7 +8,7 @@
 		<link rel="icon" href="{{ asset('storage/images/logo-96x96.png') }}" sizes="96x96" />
 		<link rel="apple-touch-icon" href="{{ asset('storage/images/logo-180x180.png') }}" />
 
-        <title>@yield('title') - {{env('APP_NAME')}}</title>
+        <title>@yield('title') - {{ config('app.name') }}</title>
         <meta name="description" content="@yield('description')" />
 		<meta name="robots" content="follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large"/>
 
@@ -27,7 +27,7 @@
 
         <!-- Open Graph / Facebook -->
 		<meta property="og:type" content="article" />
-		<meta property="og:title" content="@yield('title') - {{env('APP_NAME')}}" />
+		<meta property="og:title" content="@yield('title') - {{ config('app.name') }}" />
 		<meta property="og:url" content="@yield('canonical_link')" />
 		<meta property="og:description" content="@yield('description')" />
 		<meta property="article:published_time" content="@yield('created_at')" />
@@ -39,7 +39,7 @@
 		<meta property="og:image:alt" content />
 		<meta property="og:locale" content="pt_PT" />
 		<meta name="author" content="Edivaldo" />
-		<meta name="twitter:text:title" content="@yield('title') - {{env('APP_NAME')}}" />
+		<meta name="twitter:text:title" content="@yield('title') - {{ config('app.name') }}" />
 		<meta name="twitter:image" content="@yield('url')" />
 		<meta name="twitter:card" content="summary_large_image" />
 		
