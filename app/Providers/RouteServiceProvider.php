@@ -33,6 +33,11 @@ class RouteServiceProvider extends ServiceProvider
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
 
+            // Páginas públicas de leitura: sem sessão nem cookies. Registadas antes do
+            // grupo "web" para manterem a ordem em que sempre estiveram.
+            Route::middleware('public')
+                ->group(base_path('routes/public.php'));
+
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
         });

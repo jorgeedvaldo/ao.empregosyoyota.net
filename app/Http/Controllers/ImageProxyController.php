@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +36,12 @@ class ImageProxyController extends Controller
         'svg' => 'image/svg+xml',
     ];
 
+    /** Falhas definitivas (404, resposta que não é imagem): não se volta a perguntar durante 1 hora. */
+    private const MISSING_TTL = 3600;
+
+    /** Falhas que podem ser passageiras (timeout, erro 5xx): só 1 minuto, para recuperar depressa. */
+    private const TRANSIENT_TTL = 60;
+
     public function show(string $path): SymfonyResponse
     {
         $path = $this->sanitize($path);
@@ -45,31 +51,48 @@ class ImageProxyController extends Controller
         }
 
         $relative = 'images/'.$path;
+        $disk = Storage::disk('public');
 
-        if (Storage::disk('public')->exists($relative)) {
-            return $this->fileResponse(
-                Storage::disk('public')->get($relative),
-                $this->contentTypeForPath($path)
-            );
+        if (! $disk->exists($relative)) {
+            // Já se perguntou à origem e a imagem não existe: não prende outro processo.
+            abort_if(Cache::has("img404:{$path}"), 404);
+
+            abort_unless($this->download($path, $relative), 404);
         }
 
+        // response()->file() lê o ficheiro aos blocos, em vez de o carregar todo para memória.
+        return response()->file($disk->path($relative), [
+            'Content-Type' => $this->contentTypeForPath($path),
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+
+    /**
+     * Vai buscar a imagem à origem e guarda-a em disco. Devolve false (e
+     * lembra-se disso) se não existir ou se a origem falhar.
+     */
+    private function download(string $path, string $relative): bool
+    {
         try {
-            $response = Http::timeout(10)->get(self::ORIGIN.'/storage/'.$relative);
+            $response = Http::timeout(3)->connectTimeout(2)->get(self::ORIGIN.'/storage/'.$relative);
         } catch (\Throwable $e) {
             Log::warning('Image proxy request failed', ['path' => $path]);
-            abort(404);
+            Cache::put("img404:{$path}", true, self::TRANSIENT_TTL);
+
+            return false;
         }
 
-        if (! $response->successful()) {
-            abort(404);
+        // Uma página de erro com estado 200 não pode ficar guardada como se fosse uma imagem.
+        $isImage = $response->successful() && str_contains(strtolower((string) $response->header('Content-Type')), 'image/');
+
+        if (! $isImage) {
+            $definitive = $response->successful() || in_array($response->status(), [404, 410], true);
+            Cache::put("img404:{$path}", true, $definitive ? self::MISSING_TTL : self::TRANSIENT_TTL);
+
+            return false;
         }
 
-        $body = $response->body();
-        $contentType = $response->header('Content-Type') ?: $this->contentTypeForPath($path);
-
-        Storage::disk('public')->put($relative, $body);
-
-        return $this->fileResponse($body, $contentType);
+        return Storage::disk('public')->put($relative, $response->body());
     }
 
     /**
@@ -113,12 +136,5 @@ class ImageProxyController extends Controller
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
         return self::CONTENT_TYPES[$extension] ?? 'application/octet-stream';
-    }
-
-    private function fileResponse(string $body, string $contentType): Response
-    {
-        return response($body, 200)
-            ->header('Content-Type', $contentType)
-            ->header('Cache-Control', 'public, max-age=86400');
     }
 }

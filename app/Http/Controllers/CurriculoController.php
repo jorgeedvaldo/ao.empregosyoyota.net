@@ -9,20 +9,14 @@ class CurriculoController extends Controller
 {
     public function index()
     {
-        $curriculos = Curriculo::orderByRaw('id DESC')->paginate(15);
+        $curriculos = Curriculo::orderByDesc('id')->paginate(15);
         return view('curriculos', compact('curriculos'));
     }
 
     public function getBySlug($slug)
     {
-        try
-        {
-            $curriculo = Curriculo::where('slug', $slug)->get()[0];
-            return view('curriculo', compact('curriculo'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        $curriculo = Curriculo::where('slug', $slug)->firstOrFail();
+
+        return view('curriculo', compact('curriculo'));
     }
 }

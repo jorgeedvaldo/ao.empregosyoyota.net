@@ -3,28 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\Category;
 use App\Models\Job;
-use Exception;
 use Illuminate\Http\Request;
 
 class OcrController extends Controller
 {
     public function index()
     {
-        try
-        {
-            $LastArticles = Article::orderByRaw('id DESC')->get();
-            $LastJobs = Job::with('categories')->where('country_id', 1)->orderByRaw('id DESC')->get();
+        $LastArticles = Article::getCachedLatestAnyCountry();
+        $LastJobs = Job::getCachedLatest();
 
-            $categories = Category::orderBy('name')->get();
-
-            return view('tools.ocr', compact('categories', 'LastArticles', 'LastJobs'));
-        }
-        catch(Exception $ex)
-        {
-            abort(404);
-        }
+        return view('tools.ocr', compact('LastArticles', 'LastJobs'));
     }
 	
 	public function indexEn()
